@@ -6,6 +6,7 @@ const bodyParser = require('body-parser');
 const url = require('url');
 const querystring = require('querystring');
 var path = require('path');
+const cmd = require("node-cmd");
 
 app.use(cors())
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -57,6 +58,22 @@ app.get('/images', function (req, res) {
         });
         res.send(filesNames)
     });
+});
+
+app.post('/git', (req, res) => {
+    // If event is "push"
+    if (req.headers['x-github-event'] == "push") {
+        cmd.run('chmod 777 git.sh'); /* :/ Fix no perms after updating */
+        cmd.get('./git.sh', (err, data) => {  // Run our script
+            if (data) console.log(data);
+            if (err) console.log(err);
+        });
+        cmd.run('refresh');  // Refresh project
+
+        console.log("> [GIT] Updated with origin/master");
+    }
+
+    return res.sendStatus(200); // Send back OK status
 });
 
 function base64_encode(file) {
